@@ -1,3 +1,8 @@
+import java.io.File;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+
 /*
 	Utilice esta clase para guardar la informacion de su
 	AFD. NO DEBE CAMBIAR LOS NOMBRES DE LA CLASE NI DE LOS 
@@ -5,7 +10,11 @@
 	agregar los campos y metodos que desee.
 */
 public class AFD{
-	
+
+	int statesNumber;
+	int[] finalState;
+	int[][] transitions;
+	char[] alphabet;
 	/*
 		Implemente el constructor de la clase AFD
 		que recibe como argumento un string que 
@@ -14,7 +23,42 @@ public class AFD{
 		Puede utilizar la estructura de datos que desee
 	*/
 	public AFD(String path){
+		try{
+			Scanner file = new Scanner(new File(path));
 
+		// numero de estados
+		this.statesNumber = Integer.parseInt(file.nextLine());
+
+		// estado final.
+		String[] finalStr = file.nextLine().split(",");
+		this.finalState = new int[finalStr.length];
+		for(int i = 0; i < finalStr.length; i++){
+			this.finalState[i] = Integer.parseInt(finalStr[i]);
+		}
+
+		// alfabeto
+		String[] alphStr = file.nextLine().split(",");
+		this.alphabet = new char[alphStr.length];
+		for(int i = 0; i < alphStr.length; i++){
+			this.alphabet[i] = alphStr[i].charAt(0);
+		}
+
+		// transiciones
+		this.transitions = new int[this.alphabet.length][statesNumber];
+
+		int count = 0;
+		while(file.hasNextLine()){
+			String[] transStr = file.nextLine().split(",");
+			for(int i = 0; i < transStr.length; i++){
+				transitions[count][i] = Integer.parseInt(transStr[i]);
+			}
+			count++;
+		}
+
+		file.close();
+		}catch(FileNotFoundException e){
+			System.out.println("ERROR! Archivo no encontrado, revisa bien tu direccion.");
+			}
 	}
 
 	/*
@@ -24,7 +68,15 @@ public class AFD{
 		un entero que representa el siguiente estado
 	*/
 	public int getTransition(int currentState, char symbol){
-		return 0;
+		// ver en qué posición está el symbol y luego hacer un transitions(symbolPos) para saber en 
+		int symPos = 0;
+
+		for(int i = 0; i < this.alphabet.length; i++){
+			if(this.alphabet[i] == symbol){
+				symPos = i;
+			}
+		}
+		return this.transitions[symPos][currentState];
 	}
 
 	/*
@@ -34,7 +86,21 @@ public class AFD{
 		por el afd
 	*/
 	public boolean evaluate(String string){
-		return false;
+		// convertir el string a un arreglo de chars
+		String[] stringStr = string.split("");
+		char[] str = new char[stringStr.length];
+		for(int i = 0; i < stringStr.length; i++){
+			str[i] = stringStr[i].charAt(0);
+		}
+
+		// evaluacion
+		int state = 1;
+		for(int i = 0; i < str.length; i++){
+			state = getTransition(state, str[i]);
+		}
+
+		return isFinal(state);
+
 	}
 
 	/*
@@ -44,7 +110,12 @@ public class AFD{
 		por el afd
 	*/
 	public boolean[] evaluateMany(String[] strings){
-		return new boolean[0];
+		boolean[] ret = new boolean[strings.length];
+		for(int i = 0; i < strings.length; i++){
+			ret[i] = evaluate(strings[i]);
+		}
+		
+		return ret;
 	}
 
 	/*
@@ -52,6 +123,11 @@ public class AFD{
 		es un estado final, y false si no lo es
 	*/
 	public boolean isFinal(int currentState){
-		return true;
+		for(int i : this.finalState){
+			if(currentState == i){
+				return true;
+			}
+		}
+		return false;
 	}
 }
